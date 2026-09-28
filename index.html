@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人力資源研究</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
+<style>
+  :root{
+    --bg: #EEF1F4;
+    --card: #FFFFFF;
+    --ink: #1F2933;
+    --ink-soft: #55606B;
+    --line: #D8DEE4;
+    --primary: #3B5BA5;
+    --primary-dark: #2A4682;
+    --sage: #5F8567;
+    --sage-soft: #E7EFE8;
+    --slate: #7C8798;
+    --slate-soft: #EAEDF1;
+    --warn: #B5533C;
+    --warn-soft: #F7E9E5;
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;overflow-x:hidden;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:40px 16px 80px;
+    line-height:1.6;
+  }
+  .app{width:100%;max-width:720px;}
+  .brand{
+    display:flex;align-items:center;gap:10px;margin-bottom:22px;color:var(--ink-soft);
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;letter-spacing:.04em;
+  }
+  .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--primary);flex-shrink:0;}
+  .progress-wrap{margin-bottom:26px;}
+  .progress-track{height:3px;background:var(--line);border-radius:3px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--primary);border-radius:3px;transition:width .4s ease;}
+  .progress-labels{display:flex;justify-content:space-between;margin-top:8px;font-size:11.5px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;letter-spacing:.02em;}
+  .progress-labels span.active{color:var(--primary);font-weight:600;}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:40px 40px 34px;
+    box-shadow:0 1px 2px rgba(31,41,51,.03), 0 8px 24px rgba(31,41,51,.05);
+  }
+  h1{
+    font-family:'Fraunces',serif;font-weight:600;font-size:30px;line-height:1.25;
+    margin:0 0 6px;letter-spacing:-.01em;
+  }
+  h2{
+    font-family:'Fraunces',serif;font-weight:600;font-size:22px;margin:0 0 4px;letter-spacing:-.005em;
+  }
+  h2.part-label{font-size:18px;margin:0 0 4px;}
+  .sub{color:var(--ink-soft);font-size:15px;margin:0 0 26px;}
+  p.body-text{font-size:15px;color:var(--ink);margin:0 0 14px;}
+  .field{margin-bottom:20px;}
+  .field label{display:block;font-size:13.5px;font-weight:600;margin-bottom:7px;color:var(--ink);}
+  .field .hint{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
+  select, input[type="number"], input[type="text"], textarea{
+    width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:9px;
+    font-size:14.5px;font-family:'Inter',sans-serif;color:var(--ink);background:#FCFDFE;
+  }
+  select:focus, input:focus, textarea:focus{outline:2px solid var(--primary);outline-offset:1px;border-color:var(--primary);}
+  textarea{resize:vertical;min-height:110px;}
+  .likert{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+  .likert-opt{flex:1;min-width:38px;}
+  .likert-opt input{position:absolute;opacity:0;width:1px;height:1px;}
+  .likert-opt label{
+    display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px;
+    border:1px solid var(--line);border-radius:9px;cursor:pointer;font-size:11px;color:var(--ink-soft);
+    font-family:'IBM Plex Mono',monospace;transition:.15s;
+  }
+  .likert-opt input:checked + label{border-color:var(--primary);background:#EEF2FA;color:var(--primary-dark);font-weight:600;}
+  .likert-opt label:focus-within{outline:2px solid var(--primary);}
+  .likert-caps{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);margin-top:6px;}
+  .likert-item-caption{margin-top:6px;font-size:10.5px;color:var(--ink-soft);text-align:center;line-height:1.25;font-family:'Inter',sans-serif;word-break:keep-all;}
+  .btn{
+    appearance:none;border:none;border-radius:10px;padding:13px 22px;font-size:14.5px;font-weight:600;
+    cursor:pointer;font-family:'Inter',sans-serif;transition:.15s;
+  }
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-primary:disabled{background:var(--line);color:#9AA5AF;cursor:not-allowed;}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--primary);color:var(--primary);}
+  .btn:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
+  .row{display:flex;gap:12px;margin-top:26px;align-items:center;flex-wrap:wrap;}
+  .row.between{justify-content:space-between;}
+  .choice-grid{display:grid;gap:12px;margin-top:6px;}
+  .choice-card{
+    border:2px solid var(--line);border-radius:14px;padding:22px 24px;cursor:pointer;background:#FCFDFE;
+    transition:.15s;position:relative;
+  }
+  .choice-card:hover{border-color:var(--primary);}
+  .choice-card input{position:absolute;opacity:0;}
+  .choice-card input:checked ~ .ck-body{color:var(--primary-dark);}
+  .choice-card:has(input:checked){border-color:var(--primary);background:#EEF2FA;}
+  .ck-title{font-weight:700;font-size:17px;margin-bottom:5px;}
+  .ck-desc{font-size:14.5px;color:var(--ink-soft);}
+  .toggle-row{
+    display:flex;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid var(--line);
+  }
+  .toggle-row:last-child{border-bottom:none;}
+  .toggle-row .tog-text{flex:1;min-width:0;}
+  .ios-switch{
+    appearance:none;flex-shrink:0;position:relative;width:51px;height:31px;padding:0;margin:0;
+    border:none;border-radius:31px;background:#E9E9EB;cursor:pointer;
+    transition:background-color .25s ease;-webkit-tap-highlight-color:transparent;
+  }
+  .ios-switch::after{
+    content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;
+    box-shadow:0 3px 8px rgba(0,0,0,.15),0 3px 1px rgba(0,0,0,.06),0 0 0 .5px rgba(0,0,0,.04);
+    transition:transform .25s cubic-bezier(.3,.7,.4,1),width .15s ease;
+  }
+  .ios-switch:active::after{width:33px;}
+  .ios-switch[aria-checked="true"]{background:#34C759;}
+  .ios-switch[aria-checked="true"]::after{transform:translateX(20px);}
+  .ios-switch[aria-checked="true"]:active::after{transform:translateX(14px);}
+  .ios-switch:focus-visible{outline:2px solid var(--primary-dark);outline-offset:3px;}
+  @media (prefers-reduced-motion: reduce){.ios-switch,.ios-switch::after{transition:none;}}
+  .tbtn{
+    appearance:none;flex-shrink:0;border:2px solid var(--line);background:#FCFDFE;color:var(--ink-soft);
+    border-radius:22px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;min-width:76px;transition:.15s;
+  }
+  .tbtn.small{padding:7px 14px;min-width:0;margin-top:8px;font-size:12.5px;}
+  .tbtn.on{background:var(--sage);border-color:var(--sage);color:#fff;}
+  .tbtn:hover{border-color:var(--primary);}
+  .tbtn:disabled{opacity:.5;cursor:not-allowed;}
+  .tbtn:focus-visible{outline:2px solid var(--primary-dark);outline-offset:2px;}
+  .tog-text .tog-title{font-size:15.5px;font-weight:700;}
+  .tog-text .tog-desc{font-size:13.5px;color:var(--ink-soft);margin-top:2px;}
+  .tog-text .tog-desc em{font-style:normal;color:var(--ink-soft);display:block;margin-top:2px;}
+  .badge{
+    display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-family:'IBM Plex Mono',monospace;
+    padding:4px 10px;border-radius:20px;letter-spacing:.02em;
+  }
+  .interview-stage{
+    background:#14181D;border-radius:12px;padding:26px 24px;color:#EDEFF2;margin-bottom:20px;
+  }
+  .orb-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;row-gap:10px;}
+  .orb{width:44px;height:44px;border-radius:50%;flex-shrink:0;position:relative;background:radial-gradient(circle at 35% 30%, #5B7FCB, #2A4682);}
+  .orb.speaking::after{
+    content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid #5B7FCB;
+    animation:pulse 1.6s ease-out infinite;
+  }
+  .orb.rigid{background:radial-gradient(circle at 35% 30%, #96A0AD, #5B6472);border-radius:8px;}
+  @keyframes pulse{0%{transform:scale(.85);opacity:.9;}100%{transform:scale(1.5);opacity:0;}}
+  .orb-meta{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9AA7B5;}
+  .orb-meta strong{color:#EDEFF2;font-weight:500;}
+  .caption-box{
+    font-size:14.5px;color:#EDEFF2;line-height:1.6;min-height:52px;padding-top:2px;
+  }
+  .caption-box .q-num{color:#7C8FC9;font-family:'IBM Plex Mono',monospace;font-size:11.5px;margin-right:8px;}
+  .cam-row{display:flex;gap:16px;margin-top:18px;align-items:flex-start;flex-wrap:wrap;}
+  .cam-preview{
+    flex:0 0 80%;max-width:80%;aspect-ratio:4/3;border-radius:10px;background:#0A0D10;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;color:#5A6675;font-size:14px;border:1px solid #2A2F36;text-align:center;padding:10px;
+    transition:flex-basis .2s ease, max-width .2s ease;
+  }
+  .cam-preview.shrunk{flex:0 0 30%;max-width:30%;}
+  .cam-preview.bg-blur{position:relative;}
+  .cam-preview.bg-blur::after{
+    content:"";position:absolute;inset:0;
+    backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+    -webkit-mask-image:radial-gradient(circle at 50% 46%, transparent 32%, black 68%);
+    mask-image:radial-gradient(circle at 50% 46%, transparent 32%, black 68%);
+    pointer-events:none;
+  }
+  .cam-preview video{width:100%;height:100%;object-fit:cover;}
+  .cam-preview.hidden-self{background:#0A0D10;}
+  .cam-status{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#8B96A3;line-height:1.9;}
+  .timer-pill{
+    font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:700;background:#1F252C;color:#C8D0DA;
+    padding:8px 18px;border-radius:20px;display:inline-block;
+  }
+  .timer-pill.low{color:#E39A8A;}
+  .note{
+    font-size:12.5px;color:var(--ink-soft);background:var(--slate-soft);border-radius:9px;padding:12px 14px;margin:16px 0 0;
+  }
+  .hidden{display:none !important;}
+  .practice-tag{
+    position:absolute;top:-9px;right:14px;background:var(--sage);color:#fff;font-size:10.5px;
+    padding:2px 9px;border-radius:20px;font-family:'IBM Plex Mono',monospace;
+  }
+  .thankyou-wrap{padding:30px 0;text-align:center;}
+  .pid{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;letter-spacing:.04em;margin:6px 0 14px;}
+  .save-status{font-size:14.5px;margin-top:8px;}
+  .save-status.ok{color:var(--sage);}
+  .save-status.err{color:var(--warn);}
+  @media (max-width:520px){
+    .card{padding:26px 22px 24px;}
+    h1{font-size:24px;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="brand"><span class="dot"></span> 人力資源研究</div>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:8%"></div></div>
+    <div class="progress-labels">
+      <span id="lbl-1">研究說明</span><span id="lbl-2">流程說明</span><span id="lbl-3">面試體驗</span><span id="lbl-4">問卷填寫</span><span id="lbl-5">背景資料</span><span id="lbl-6">完成</span>
+    </div>
+  </div>
+
+  <div class="card" id="cardRoot"></div>
+</div>
+
+<script>
+/* ============ 後端設定（Google Apps Script）============ */
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxQNkhdS47ylFYLFb1hd0N20_MXCHPWln2ogK7qm13HgqEhrZ9sxistQrUo_6ljgPxe/exec";
+
+// 欄位順序：必須跟 Apps Script（程式碼.gs）裡的 HEADERS 一模一樣
+const HEADERS = [
+  "id","timestamp","condition","conditionCode","mode","didPractice",
+  "captions","practice","bgCustom","positiveTimer","extraTimeUsedCount",
+  "age","gender","education","jobFunction","industry","email",
+  "priorAiInterviewExperience","aiToolUsageFrequency",
+  "neuro_1","neuro_2","neuro_3","neuro_4","neuro_5","neuro_6","neuro_7","neuro_8","neuro_9","neuro_10",
+  "neurodiversityAvg",
+  "innov_1","innov_2","innov_3","innov_4",
+  "personalInnovativenessAvg",
+  "q1_responseTimeSec","q1_extraTimeUsed","q1_answerText",
+  "q2_responseTimeSec","q2_extraTimeUsed","q2_answerText",
+  "q3_responseTimeSec","q3_extraTimeUsed","q3_answerText",
+  "trust_1","trust_2","trust_3","trust_4","trust_5","trust_6","trust_7","trust_8","trust_9","trust_10",
+  "trustAvg",
+  "serverTime"
+];
+
+/* ============ STATE ============ */
+const S = {
+  stage: 'intro',
+  id: null,
+  condition: null,       // 'control' | 'comparison' | 'universal'
+  mode: null,             // 'video' | 'audio' | 'text'  (universal only)
+  accommodations: { captions:false, practice:false, bgCustom:false, positiveTimer:false },
+  didPractice: false,
+  demographics: {},
+  qIndex: 0,
+  responses: [],
+  camStream: null,
+  trust: {},
+  scaleScores: {}
+};
+
+const PREP_TIME = 60;
+const ANSWER_TIME = 120;
+
+const QUESTIONS = [
+  "請您花兩分鐘做簡短的自我介紹。",
+  "請舉出一個您曾經在職場上成功說服別人按照自己想法做事的例子。",
+  "請您舉出一個您必須將一件複雜的事情向一組團隊或一個人解釋的例子。"
+];
+const PRACTICE_QUESTION = "（練習題）請說出您今天早上做的第一件事。這一題不計分。";
+
+const TRUST_ITEMS = [
+  "該面試使我感到不舒服",
+  "面試進行的速度令我感到不安",
+  "我相信該面試是客觀公平的",
+  "我相信該面試並不會損及我的權益",
+  "該面試的介面不會讓我有害怕的感覺",
+  "我知道面試並不會無故中斷",
+  "該面試看起來不太可靠",
+  "該面試工具似乎是可以被信任的",
+  "該面試過程中讓我覺得有安全感",
+  "該面試的操作流程符合我的預期"
+];
+
+const NEURO_ITEMS = [
+  "我時常注意到其他人不會留意的小聲音。",
+  "當我在閱讀故事時，我覺得很難理解故事人物的想法或動機。",
+  "我可以輕易地了解別人跟我說話時背後的含義。",
+  "我常把注意力放在事物的整體多過於細節上。",
+  "我能意識到別人對我所說的話是否感到悶了。",
+  "我覺得同時進行多項任務是容易的。",
+  "我可以容易地憑別人的表情來理解他人的想法和情感。",
+  "如果我在做事時被干擾了，可以很快地回頭做原先做的事。",
+  "我喜歡網羅或收集某種資訊（例如：車類，鳥類，火車類，植物類等）。",
+  "我很難理解別人的動機或想法。"
+];
+const INNOV_ITEMS = [
+  "如果聽說有新的資訊科技，我會找機會嘗試。",
+  "在同儕中，我通常是第一個探索新資訊科技的人。",
+  "我喜歡嘗試新的資訊科技。",
+  "總的來說，我主動嘗試新資訊科技。"
+];
+
+const genId = () => 'P-' + Array.from({length:8}, () => "ABCDEFGHJKMNPQRSTUVWXYZ23456789"[Math.floor(Math.random()*32)]).join('');
+let segmentationInstance = null;
+let camActive = false;
+let segRafId = null;
+
+function conditionLabel(cond){
+  if(cond === 'control') return '控制組';
+  if(cond === 'comparison') return '對照組';
+  if(cond === 'universal') return '實驗組';
+  return cond || '-';
+}
+
+/* ============ PROGRESS BAR ============ */
+const STAGE_PCT = { intro:5, consent:15, setup:30, interview:50, trust:68, demographics:85, done:100 };
+function updateProgress(){
+  document.getElementById('progressFill').style.width = STAGE_PCT[S.stage] + '%';
+  const map = {intro:1, consent:2, setup:3, interview:3, trust:4, demographics:5, done:6};
+  for(let i=1;i<=6;i++){
+    document.getElementById('lbl-'+i).classList.toggle('active', map[S.stage]===i);
+  }
+}
+
+/* ============ RENDER ROUTER ============ */
+function render(){
+  updateProgress();
+  const root = document.getElementById('cardRoot');
+  const renderers = {
+    intro: renderIntro,
+    consent: renderConsent,
+    demographics: renderDemographics,
+    setup: renderSetup,
+    interview: renderInterview,
+    trust: renderTrust,
+    done: renderDone
+  };
+  root.innerHTML = '';
+  renderers[S.stage]();
+}
+
+/* ============ SCREEN 0: INTRO (研究說明) ============ */
+function renderIntro(){
+  document.getElementById('cardRoot').innerHTML = `
+    <h1>面試系統與使用者感受 研究</h1>
+    <p class="body-text">您好，我是國立中山大學人力資源管理研究所的學生 楊雅婷，目前與指導教授共同進行一項關於「面試系統與使用者感受」之學術研究。</p>
+    <p class="body-text">本研究包含面試模擬體驗及問卷填寫。</p>
+    <p class="body-text">調查對象：有求職面試經驗者<br>填答時間：約15-20分鐘</p>
+    <p class="body-text">本問卷為學術性質之研究，問題答案無關對錯，僅需依照您的個人經驗與感受回答即可。所有填答資料純粹供學術研究之用，內容絕對保密，敬請安心填答。</p>
+    <p class="body-text">為了感謝大家撥冗填答，本問卷將提供「7-11數位商品禮券」作為抽獎禮物。<br>200元 × 30張<br>完成問卷後，請留下您的常用email，以便中獎時聯繫。得獎通知將透過電子郵件寄送，敬請留意。</p>
+    <p class="body-text">研究過程中，若您想退出研究，您可於任何時間、無需說明理由，自由退出本研究。所有填答資料均為受試者匿名代碼方式輸入資料庫，全程不涉及任何可識別個人身份之資訊，確保個資外流風險降至最低。</p>
+    <p class="body-text">再次感謝您協助本研究進行！<br>如有任何疑問，歡迎與我聯繫。</p>
+    <p class="body-text">國立中山大學人力資源管理研究所<br>研究生：楊雅婷<br>指導教授：鄭怡玲 博士<br>聯絡方式：applea1003@gmail.com</p>
+    <div class="row">
+      <button class="btn btn-primary" id="introNextBtn">開始</button>
+    </div>
+  `;
+  document.getElementById('introNextBtn').addEventListener('click', () => {
+    S.stage = 'consent';
+    render();
+  });
+}
+
+/* ============ SCREEN 1: 流程說明 ============ */
+function renderConsent(){
+  document.getElementById('cardRoot').innerHTML = `
+    <h1>面試模擬體驗</h1>
+    <p class="body-text">流程包含：面試模擬體驗 → 問卷填寫 → 背景資料填寫，全程約15-20分鐘，請您於安靜且方便談話的空間進行。</p>
+    <p class="body-text">本面試體驗不會錄影、錄音或儲存您的面試作答內容，僅記錄您的背景資料及問卷填寫，且以匿名保存，不會與您的真實身分產生連結，敬請放心填答。</p>
+    <div class="row">
+      <button class="btn btn-primary" id="startBtn">開始面試體驗</button>
+    </div>
+  `;
+  const btn = document.getElementById('startBtn');
+  btn.addEventListener('click', async () => {
+    btn.disabled = true;
+    btn.textContent = '請稍候…';
+    S.condition = await assignBalancedCondition();
+    S.stage = 'setup';
+    render();
+  });
+}
+
+/* 依試算表中各組已完成人數，把新受試者分到人數最少的組；
+   連不上後端時退回三組隨機分派。 */
+async function assignBalancedCondition(){
+  const groups = ['control','comparison','universal'];
+  let counts = { control:0, comparison:0, universal:0 };
+  try{
+    const res = await fetch(WEB_APP_URL + '?action=counts');
+    const data = await res.json();
+    if(data && data.status === 'ok' && data.counts) counts = Object.assign(counts, data.counts);
+  }catch(err){}
+  const minCount = Math.min(counts.control, counts.comparison, counts.universal);
+  const candidates = groups.filter(g => counts[g] === minCount);
+  return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+/* ============ SCREEN 2: DEMOGRAPHICS (now final step) ============ */
+function likertGroup(name, labels){
+  const n = labels.length;
+  let html = `<div class="likert">`;
+  for(let i=1;i<=n;i++){
+    html += `<div class="likert-opt">
+      <input type="radio" name="${name}" id="${name}_${i}" value="${i}">
+      <label for="${name}_${i}">${i}</label>
+      <div class="likert-item-caption">${labels[i-1]}</div>
+    </div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+function renderDemographics(){
+  document.getElementById('cardRoot').innerHTML = `
+    <h2>背景資料</h2>
+    <p class="sub">以下資料僅用於統計分析。</p>
+    <div id="demoFormWrap">
+      <div class="field">
+        <label for="age">年齡</label>
+        <input type="number" id="age" min="16" max="80" placeholder="例如：24">
+      </div>
+      <div class="field">
+        <label for="gender">性別</label>
+        <select id="gender">
+          <option value="" disabled selected>請選擇</option>
+          <option>生理女</option><option>生理男</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="edu">最高教育程度</label>
+        <select id="edu">
+          <option value="" disabled selected>請選擇</option>
+          <option>高中（職）及以下</option><option>大學／專科</option><option>碩士</option><option>博士</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="jobFunction">工作職能</label>
+        <select id="jobFunction">
+          <option value="" disabled selected>請選擇</option>
+          <option>行政 / 總務</option>
+          <option>業務 / 銷售 / 行銷</option>
+          <option>研發 / 工程 / 技術</option>
+          <option>財務 / 會計</option>
+          <option>人力資源</option>
+          <option>生產 / 品管 / 營運</option>
+          <option>客服 / 服務</option>
+          <option value="__other__">其他(自行填答)</option>
+        </select>
+        <input type="text" id="jobFunctionOther" class="hidden" placeholder="請填寫" maxlength="50" style="margin-top:8px;">
+      </div>
+      <div class="field">
+        <label for="industry">產業類別</label>
+        <select id="industry">
+          <option value="" disabled selected>請選擇</option>
+          <option>製造業</option>
+          <option>資訊及通訊傳播業（科技 / 軟體）</option>
+          <option>金融及保險業</option>
+          <option>醫療保健及社會工作服務業</option>
+          <option>教育業</option>
+          <option>批發、零售及餐飲住宿業</option>
+          <option>公共行政及國防（政府 / 公部門）</option>
+          <option>專業、科學及技術服務業（顧問 / 法律 / 會計）</option>
+          <option value="__other__">其他(自行填答)</option>
+        </select>
+        <input type="text" id="industryOther" class="hidden" placeholder="請填寫" maxlength="50" style="margin-top:8px;">
+      </div>
+      <div class="field">
+        <label for="aiExp">是否曾經參與過 AI 面試（由AI 評分的面試）？</label>
+        <select id="aiExp">
+          <option value="" disabled selected>請選擇</option>
+          <option>是</option><option>否</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="aiToolFreq">日常使用 AI 工具（如 ChatGPT、Claude 等）的頻率？</label>
+        <select id="aiToolFreq">
+          <option value="" disabled selected>請選擇</option>
+          <option>從不</option><option>很少</option><option>偶爾</option><option>經常</option><option>每天</option>
+        </select>
+      </div>
+
+      <div class="field" style="margin-top:28px;">
+        <label for="email">常用 Email（供中獎聯繫使用，7-11數位商品禮券抽獎通知將以此聯繫）</label>
+        <input type="text" id="email" placeholder="example@mail.com">
+      </div>
+
+      <div class="row">
+        <button type="button" class="btn btn-primary" id="demoSubmitBtn">送出資料</button>
+      </div>
+      <div class="note hidden" id="demoFormError" style="background:var(--warn-soft);color:#8A3F2C;">請完成所有題目後再送出。</div>
+    </div>
+  `;
+
+  const jobFunctionSel = document.getElementById('jobFunction');
+  const jobFunctionOther = document.getElementById('jobFunctionOther');
+  jobFunctionSel.addEventListener('change', () => {
+    jobFunctionOther.classList.toggle('hidden', jobFunctionSel.value !== '__other__');
+  });
+  const industrySel = document.getElementById('industry');
+  const industryOther = document.getElementById('industryOther');
+  industrySel.addEventListener('change', () => {
+    industryOther.classList.toggle('hidden', industrySel.value !== '__other__');
+  });
+
+  document.getElementById('demoSubmitBtn').addEventListener('click', () => {
+    const errEl = document.getElementById('demoFormError');
+    const ageVal = document.getElementById('age').value;
+    const genderVal = document.getElementById('gender').value;
+    const eduVal = document.getElementById('edu').value;
+    const jobFunctionVal = jobFunctionSel.value === '__other__' ? jobFunctionOther.value.trim() : jobFunctionSel.value;
+    const industryVal = industrySel.value === '__other__' ? industryOther.value.trim() : industrySel.value;
+    const aiExpVal = document.getElementById('aiExp').value;
+    const aiToolFreqVal = document.getElementById('aiToolFreq').value;
+    const emailVal = document.getElementById('email').value.trim();
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal);
+    const missingBasic = !ageVal || !genderVal || !eduVal || !jobFunctionSel.value || !jobFunctionVal || !industrySel.value || !industryVal || !aiExpVal || !aiToolFreqVal || !emailValid;
+    if(missingBasic){
+      if(errEl) errEl.classList.remove('hidden');
+      document.getElementById('demoFormWrap').scrollIntoView({behavior:'smooth', block:'start'});
+      return;
+    }
+    if(errEl) errEl.classList.add('hidden');
+    S.demographics = {
+      age: Number(ageVal),
+      gender: genderVal,
+      education: eduVal,
+      jobFunction: jobFunctionVal,
+      industry: industryVal,
+      priorAiInterviewExperience: aiExpVal,
+      aiToolUsageFrequency: aiToolFreqVal,
+      email: emailVal,
+      neurodiversityItems: S.scaleScores.neurodiversityItems,
+      neurodiversityAvg: S.scaleScores.neurodiversityAvg,
+      personalInnovativenessItems: S.scaleScores.personalInnovativenessItems,
+      personalInnovativenessAvg: S.scaleScores.personalInnovativenessAvg
+    };
+    finishAndSave();
+  });
+}
+
+/* ============ SCREEN 3: SETUP (condition-specific) ============ */
+function renderSetup(){
+  const root = document.getElementById('cardRoot');
+
+  if(S.condition === 'control'){
+    root.innerHTML = `
+      <h2>面試說明</h2>
+      <p class="body-text">您的面試表現將由 AI 演算法進行評估與篩選，若您已明白這場錄影面試會由 AI 進行測評，請開始面試，並確保您的鏡頭和麥克風開啟。</p>
+      <p class="body-text">共有 3 題面試問題，每題有 60 秒的準備時間及 120 秒作答時間。</p>
+      <div class="row">
+        <button class="btn btn-primary" id="beginBtn">開始面試</button>
+      </div>
+    `;
+    document.getElementById('beginBtn').addEventListener('click', () => startInterview(false));
+    return;
+  }
+
+  if(S.condition === 'comparison'){
+    root.innerHTML = `
+      <h2>面試說明</h2>
+      <p class="body-text">您的面試表現將由人類進行評估與篩選，若您已明白這場錄影面試會由人類進行測評，請開始面試，並確保您的鏡頭和麥克風開啟。</p>
+      <p class="body-text">共有 3 題面試問題，每題有 60 秒的準備時間及 120 秒作答時間。</p>
+      <div class="row">
+        <button class="btn btn-primary" id="beginBtn">開始面試</button>
+      </div>
+    `;
+    document.getElementById('beginBtn').addEventListener('click', () => startInterview(false));
+    return;
+  }
+
+  // universal design condition
+  root.innerHTML = `
+    <h2>面試說明</h2>
+    <p class="sub">您的面試表現將由 AI 演算法進行評估與篩選，AI 面試分析將根據您面部肌肉移動的瞬間表情和語調，間接推測您的個人特質與工作相關的行為傾向。本面試採「通用設計」，故您可依自己的舒適自在程度，選擇最適合的面試模式，不影響面試結果。</p>
+    <div class="choice-grid" id="modeGrid">
+      <label class="choice-card"><input type="radio" name="mode" value="video">
+        <div class="ck-body"><div class="ck-title">完整開啟影音面試</div><div class="ck-desc">開啟鏡頭與麥克風，AI 將評估您的語音與面部表情</div></div>
+      </label>
+      <label class="choice-card"><input type="radio" name="mode" value="audio">
+        <div class="ck-body"><div class="ck-title">關閉鏡頭，僅語音作答</div><div class="ck-desc">AI 將不評估您的面部表情與眼神</div></div>
+      </label>
+      <label class="choice-card"><input type="radio" name="mode" value="text">
+        <div class="ck-body"><div class="ck-title">純文字對話視窗作答</div><div class="ck-desc">AI 將不評估語音與表情</div></div>
+      </label>
+    </div>
+
+    <h2 style="margin-top:30px;">輔助功能（可自由開啟）</h2>
+    <p class="sub">您可以依需求開啟以下功能。</p>
+    <div id="accomList">
+      ${toggleRow('captions','即時字幕與文字回顧','面試過程中顯示提問的文字字幕。')}
+      ${toggleRow('practice','事前練習題','正式作答前，先進行一題不計入紀錄的練習題。')}
+      ${toggleRow('bgCustom','自訂背景（模糊化）','將您鏡頭畫面的背景進行模糊處理（僅視訊模式適用）。')}
+      ${toggleRow('positiveTimer','正向計時選擇','以正向文字取代倒數讀秒的呈現方式。','例如顯示「已使用 45 秒」，取代「剩餘 15 秒」的倒數提示。')}
+    </div>
+
+    <p class="body-text" style="margin-top:26px;">若您已明白這場錄影面試會由 AI 進行測評，請開始面試，並根據您選擇的面試模式開啟鏡頭或麥克風。共有 3 題問題，每題有 60 秒的準備時間及 120 秒作答時間。</p>
+    <div class="row">
+      <button class="btn btn-primary" id="beginBtn" disabled>開始面試</button>
+    </div>
+  `;
+  const modeInputs = document.querySelectorAll('input[name="mode"]');
+  const beginBtn = document.getElementById('beginBtn');
+  modeInputs.forEach(inp => inp.addEventListener('change', () => {
+    S.mode = inp.value;
+    beginBtn.disabled = false;
+  }));
+  ['captions','practice','bgCustom','positiveTimer'].forEach(key => {
+    const btn = document.getElementById('tbtn_'+key);
+    btn.addEventListener('click', () => {
+      S.accommodations[key] = !S.accommodations[key];
+      btn.setAttribute('aria-checked', String(S.accommodations[key]));
+    });
+  });
+  beginBtn.addEventListener('click', () => startInterview(S.accommodations.practice));
+}
+
+function toggleRow(key, title, desc, example){
+  return `
+    <div class="toggle-row">
+      <div class="tog-text"><div class="tog-title" id="tlbl_${key}">${title}</div><div class="tog-desc">${desc}${example ? `<em>${example}</em>` : ''}</div></div>
+      <button type="button" class="ios-switch" id="tbtn_${key}" role="switch" aria-checked="false" aria-labelledby="tlbl_${key}"></button>
+    </div>
+  `;
+}
+
+/* ============ SCREEN 4: INTERVIEW ============ */
+function startInterview(withPractice){
+  S.qIndex = withPractice ? -1 : 0; // -1 = practice question
+  S.responses = [];
+  S.stage = 'interview';
+  render();
+}
+
+async function setupCamera(){
+  const el = document.getElementById('camPreview');
+  if(!el) return;
+  const wantBlur = S.condition === 'universal' && S.accommodations.bgCustom;
+  el.classList.remove('bg-blur');
+
+  const markStatus = (videoTxt, audioTxt) => {
+    const v = document.getElementById('camVideoStatus');
+    const a = document.getElementById('camAudioStatus');
+    if(v && videoTxt !== null) v.textContent = videoTxt;
+    if(a && audioTxt !== null) a.textContent = audioTxt;
+  };
+
+  let stream;
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    markStatus('已連接', '已連接');
+  }catch(err){
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      markStatus('已連接', '無法啟用');
+    }catch(err2){
+      markStatus('無法啟用', '無法啟用');
+      el.textContent = '（無法取得鏡頭權限，顯示為畫面預覽佔位）';
+      return;
+    }
+  }
+  S.camStream = stream;
+
+  try{
+    if(wantBlur && typeof SelfieSegmentation !== 'undefined'){
+      el.innerHTML = '<video autoplay muted playsinline style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;"></video><canvas style="width:100%;height:100%;display:block;"></canvas>';
+      const video = el.querySelector('video');
+      const canvas = el.querySelector('canvas');
+      el.style.position = 'relative';
+      video.srcObject = stream;
+      await new Promise(resolve => { video.onloadedmetadata = () => resolve(); });
+      const rect = el.getBoundingClientRect();
+      canvas.width = Math.max(Math.round(rect.width), 160);
+      canvas.height = Math.max(Math.round(rect.height), 120);
+      const ctx = canvas.getContext('2d');
+
+      if(!segmentationInstance){
+        try{
+          segmentationInstance = new SelfieSegmentation({ locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}` });
+          segmentationInstance.setOptions({ modelSelection: 1 });
+        }catch(err){ segmentationInstance = null; }
+      }
+
+      if(segmentationInstance){
+        let gotFirstFrame = false;
+        segmentationInstance.onResults((results) => {
+          gotFirstFrame = true;
+          const iw = results.image.width, ih = results.image.height;
+          const cw = canvas.width, ch = canvas.height;
+          const canvasRatio = cw/ch, imgRatio = iw/ih;
+          let sx,sy,sw,sh;
+          if(imgRatio > canvasRatio){ sh = ih; sw = ih*canvasRatio; sx=(iw-sw)/2; sy=0; }
+          else { sw = iw; sh = iw/canvasRatio; sx=0; sy=(ih-sh)/2; }
+          ctx.save();
+          ctx.clearRect(0,0,cw,ch);
+          ctx.drawImage(results.segmentationMask, sx,sy,sw,sh, 0,0,cw,ch);
+          ctx.globalCompositeOperation = 'source-in';
+          ctx.drawImage(results.image, sx,sy,sw,sh, 0,0,cw,ch);
+          ctx.globalCompositeOperation = 'destination-over';
+          ctx.filter = 'blur(16px)';
+          ctx.drawImage(results.image, sx,sy,sw,sh, 0,0,cw,ch);
+          ctx.filter = 'none';
+          ctx.restore();
+        });
+        camActive = true;
+        const frameLoop = async () => {
+          if(!camActive) return;
+          try{ await segmentationInstance.send({ image: video }); }catch(err){}
+          if(camActive) segRafId = requestAnimationFrame(frameLoop);
+        };
+        frameLoop();
+        setTimeout(() => {
+          if(!gotFirstFrame && S.camStream === stream){
+            camActive = false;
+            if(segRafId){ cancelAnimationFrame(segRafId); segRafId = null; }
+            el.innerHTML = '<video autoplay muted playsinline></video>';
+            el.querySelector('video').srcObject = stream;
+            el.classList.add('bg-blur');
+          }
+        }, 2500);
+        return;
+      }
+    }
+    el.innerHTML = '<video autoplay muted playsinline></video>';
+    el.querySelector('video').srcObject = stream;
+    if(wantBlur){ el.classList.add('bg-blur'); }
+  }catch(err){
+    el.textContent = '（無法取得鏡頭權限，顯示為畫面預覽佔位）';
+  }
+}
+function stopCamera(){
+  camActive = false;
+  if(segRafId){ cancelAnimationFrame(segRafId); segRafId = null; }
+  if(S.camStream){ S.camStream.getTracks().forEach(t => t.stop()); S.camStream = null; }
+}
+async function setupAudioOnly(){
+  const a = document.getElementById('camAudioStatus');
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    S.camStream = stream;
+    if(a) a.textContent = '已連接';
+  }catch(err){
+    if(a) a.textContent = '無法啟用';
+  }
+}
+function speakQuestion(text, onEnd){
+  if(typeof window.speechSynthesis === 'undefined'){ if(onEnd) onEnd(); return; }
+  try{ window.speechSynthesis.cancel(); }catch(err){}
+  try{
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'zh-TW';
+    utter.rate = 0.98;
+    if(onEnd){ utter.onend = onEnd; utter.onerror = onEnd; }
+    window.speechSynthesis.speak(utter);
+  }catch(err){ if(onEnd) onEnd(); }
+}
+
+function renderInterview(){
+  const isPractice = S.qIndex === -1;
+  const question = isPractice ? PRACTICE_QUESTION : QUESTIONS[S.qIndex];
+  const totalQ = QUESTIONS.length;
+  const isUniversal = S.condition === 'universal';
+  const showVideo = isUniversal ? (S.mode === 'video') : true;
+  const showAudioOnly = isUniversal && S.mode === 'audio';
+  const showText = isUniversal && S.mode === 'text';
+
+  document.getElementById('cardRoot').innerHTML = `
+    <h2 id="phaseHeading">準備時間</h2>
+    <div class="interview-stage" style="position:relative;">
+      ${isPractice ? '<span class="practice-tag">練習題・不計分</span>' : ''}
+      <div class="orb-row" style="justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div class="orb speaking ${!isUniversal ? 'rigid' : ''}"></div>
+          <div class="orb-meta">
+            <div><strong>面試官</strong></div>
+            <div>問題 ${isPractice ? '練習' : (S.qIndex+1) + ' / ' + totalQ} ・ <span class="timer-pill" id="timerPill">準備中…</span></div>
+          </div>
+        </div>
+        <span id="extraTimeSlot"></span>
+      </div>
+      <div class="caption-box">
+        ${(isUniversal && S.accommodations.captions) ? `<span class="q-num">Q</span>${question}` : '<span class="q-num">🔊🎥</span>（面試官正在提問中...）'}
+      </div>
+      ${(showVideo) ? `
+        <div class="cam-row">
+          <div class="cam-preview" id="camPreview">畫面載入中…</div>
+          <div class="cam-status">
+            鏡頭：<span id="camVideoStatus">連接中…</span><br>
+            麥克風：<span id="camAudioStatus">連接中…</span>
+            ${(isUniversal) ? `<br><button type="button" class="tbtn small" id="hideCamBtn">隱藏我的鏡頭畫面</button>
+            <button type="button" class="tbtn small" id="shrinkCamBtn">縮小我的鏡頭畫面</button>` : ''}
+          </div>
+        </div>` : ''}
+      ${(showAudioOnly) ? `
+        <div class="cam-row"><div class="cam-status">鏡頭：關閉<br>麥克風：<span id="camAudioStatus">連接中…</span></div></div>` : ''}
+      ${(showText) ? `
+        <div class="cam-row"><div class="cam-status">模式：純文字對話</div></div>` : ''}
+    </div>
+
+    <div id="phasePanel">
+      <div class="row">
+        <button type="button" class="btn btn-ghost" id="skipPrepBtn">我已準備好，開始作答</button>
+      </div>
+    </div>
+  `;
+
+  if(showVideo){ setupCamera(); }
+  else if(showAudioOnly){ setupAudioOnly(); }
+
+  let hidden = false;
+  const hideBtn = document.getElementById('hideCamBtn');
+  if(hideBtn){
+    hideBtn.addEventListener('click', () => {
+      hidden = !hidden;
+      const prev = document.getElementById('camPreview');
+      const visual = prev.querySelector('canvas') || prev.querySelector('video');
+      if(hidden){
+        if(visual) visual.style.visibility = 'hidden';
+        prev.classList.add('hidden-self');
+        prev.insertAdjacentHTML('beforeend', '<span id="hiddenLabel" style="position:absolute;color:#5A6675;font-size:10.5px;">已隱藏畫面</span>');
+        prev.style.position = 'relative';
+        hideBtn.textContent = '顯示我的鏡頭畫面';
+      } else {
+        if(visual) visual.style.visibility = 'visible';
+        prev.classList.remove('hidden-self');
+        const lbl = document.getElementById('hiddenLabel');
+        if(lbl) lbl.remove();
+        hideBtn.textContent = '隱藏我的鏡頭畫面';
+      }
+    });
+  }
+  let shrunk = false;
+  const shrinkBtn = document.getElementById('shrinkCamBtn');
+  if(shrinkBtn){
+    shrinkBtn.addEventListener('click', () => {
+      shrunk = !shrunk;
+      const prev = document.getElementById('camPreview');
+      prev.classList.toggle('shrunk', shrunk);
+      shrinkBtn.textContent = shrunk ? '放大我的鏡頭畫面' : '縮小我的鏡頭畫面';
+    });
+  }
+
+  /* ---- phase / timer state ---- */
+  let phase = 'prep';
+  let total = PREP_TIME;
+  let remaining = PREP_TIME;
+  let extraTimeUsed = false;
+  let advanced = false;
+  let answerStartedAt = null;
+  const pill = document.getElementById('timerPill');
+
+  function paintTimer(){
+    if(!pill) return;
+    if(isUniversal && S.accommodations.positiveTimer){
+      const used = Math.max(total - remaining, 0);
+      pill.classList.remove('low');
+      pill.textContent = '已使用 ' + used + ' 秒' + (phase === 'prep' ? '準備時間' : '作答時間');
+    } else if(phase === 'prep'){
+      pill.classList.remove('low');
+      pill.textContent = '剩餘準備時間 ' + Math.max(remaining,0) + ' 秒';
+    } else {
+      pill.textContent = '剩餘作答時間 ' + Math.max(remaining,0) + ' 秒';
+      pill.classList.toggle('low', remaining <= 15);
+    }
+  }
+  paintTimer();
+
+  function renderPrepExtraButton(){
+    if(!isUniversal) return;
+    const slot = document.getElementById('extraTimeSlot');
+    if(!slot) return;
+    slot.innerHTML = `<button type="button" class="tbtn" id="extraPrepBtn">增加 15 秒準備時間</button>`;
+    const btn = document.getElementById('extraPrepBtn');
+    btn.addEventListener('click', () => {
+      const bonus = 15;
+      total += bonus; remaining += bonus;
+      btn.disabled = true; btn.classList.add('on'); btn.textContent = '已增加 15 秒時間';
+      paintTimer();
+    });
+  }
+  renderPrepExtraButton();
+
+  let timerInt = setInterval(() => {
+    remaining -= 1;
+    paintTimer();
+    if(remaining <= 0){
+      clearInterval(timerInt);
+      if(phase === 'prep'){ enterAnswerPhase(); } else { goNext(); }
+    }
+  }, 1000);
+
+  function enterAnswerPhase(){
+    if(phase === 'answer') return;
+    phase = 'answer';
+    total = ANSWER_TIME;
+    remaining = ANSWER_TIME;
+    answerStartedAt = Date.now();
+    paintTimer();
+    const heading = document.getElementById('phaseHeading');
+    if(heading) heading.textContent = '作答時間';
+    speakQuestion('請您開始作答');
+    renderAnswerPanel();
+    if(isUniversal){
+      const slot = document.getElementById('extraTimeSlot');
+      if(slot){
+        slot.innerHTML = `<button type="button" class="tbtn" id="extraTimeBtn">增加 30 秒作答時間</button>`;
+        const extraBtn = document.getElementById('extraTimeBtn');
+        extraBtn.addEventListener('click', () => {
+          const bonus = 30;
+          total += bonus; remaining += bonus; extraTimeUsed = true;
+          extraBtn.disabled = true; extraBtn.classList.add('on'); extraBtn.textContent = '已增加 30 秒時間';
+          paintTimer();
+        });
+      }
+    }
+    timerInt = setInterval(() => {
+      remaining -= 1;
+      paintTimer();
+      if(remaining <= 0){
+        clearInterval(timerInt);
+        goNext();
+      }
+    }, 1000);
+  }
+
+  function renderAnswerPanel(){
+    const panel = document.getElementById('phasePanel');
+    panel.innerHTML = `
+      ${(showText) ? `
+        <div class="field">
+          <label for="answerBox">請輸入您的回覆：</label>
+          <textarea id="answerBox" placeholder="開始輸入…"></textarea>
+        </div>` : ''}
+      <div class="row between">
+        <span></span>
+        <button class="btn btn-primary" id="nextBtn">${isPractice ? '完成練習，開始正式面試' : (S.qIndex === totalQ-1 ? '前往問卷填寫' : '下一題')}</button>
+      </div>
+    `;
+    document.getElementById('nextBtn').addEventListener('click', goNext);
+  }
+
+  const skipBtn = document.getElementById('skipPrepBtn');
+  if(skipBtn){
+    skipBtn.addEventListener('click', () => {
+      if(phase !== 'prep') return;
+      clearInterval(timerInt);
+      enterAnswerPhase();
+    });
+  }
+
+  speakQuestion(question);
+
+  function goNext(){
+    if(advanced) return;
+    advanced = true;
+    clearInterval(timerInt);
+    try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(err){}
+    if(!isPractice){
+      const elapsed = answerStartedAt ? Math.round((Date.now() - answerStartedAt)/1000) : 0;
+      const entry = { question: question, responseTimeSec: elapsed, extraTimeUsed: extraTimeUsed };
+      if(showText){
+        const box = document.getElementById('answerBox');
+        entry.answerText = box ? box.value.trim() : '';
+      }
+      S.responses.push(entry);
+    } else {
+      S.didPractice = true;
+    }
+    stopCamera();
+    if(isPractice){
+      S.qIndex = 0;
+    } else if(S.qIndex < totalQ - 1){
+      S.qIndex += 1;
+    } else {
+      S.stage = 'trust';
+    }
+    render();
+  }
+}
+
+/* ============ SCREEN 5: TRUST SCALE ============ */
+function renderTrust(){
+  const introText = S.condition === 'comparison'
+    ? '您的面試表現將由人類進行評估與篩選，接下來請針對剛才體驗的面試系統與相關題目進行填答。'
+    : '您的面試表現將由 AI 演算法進行評估與篩選，接下來請針對剛才體驗的面試系統與相關題目進行填答。';
+  document.getElementById('cardRoot').innerHTML = `
+    <h2>問卷填寫</h2>
+    <p class="sub">${introText}</p>
+    <div id="trustFormWrap">
+      <h2 class="part-label">第一部分</h2>
+      <p class="sub">（1 = 非常不同意，2 = 不同意，3 = 普通，4 = 同意，5 = 非常同意）</p>
+      ${TRUST_ITEMS.map((item,i) => `
+        <div style="margin:16px 0;">
+          <div style="font-size:13.5px;margin-bottom:2px;">${i+1}. ${item}</div>
+          ${likertGroup('trust_'+i, ['非常不同意','不同意','普通','同意','非常同意'])}
+        </div>`).join('')}
+
+      <h2 class="part-label" style="margin-top:32px;">第二部分</h2>
+      <p class="sub">（1 = 完全不同意，2 = 稍微不同意，3 = 稍微同意，4 = 完全同意）</p>
+      ${NEURO_ITEMS.map((item,i) => `
+        <div style="margin:16px 0;">
+          <div style="font-size:13.5px;margin-bottom:2px;">${i+1}. ${item}</div>
+          ${likertGroup('neuro_'+i, ['完全不同意','稍微不同意','稍微同意','完全同意'])}
+        </div>`).join('')}
+
+      <h2 class="part-label" style="margin-top:32px;">第三部分</h2>
+      <p class="sub">（1 = 非常不同意，2 = 不同意，3 = 有點不同意，4 = 普通，5 = 有點同意，6 = 同意，7 = 非常同意）</p>
+      ${INNOV_ITEMS.map((item,i) => `
+        <div style="margin:16px 0;">
+          <div style="font-size:13.5px;margin-bottom:2px;">${i+1}. ${item}</div>
+          ${likertGroup('innov_'+i, ['非常不同意','不同意','有點不同意','普通','有點同意','同意','非常同意'])}
+        </div>`).join('')}
+
+      <div class="row">
+        <button type="button" class="btn btn-primary" id="trustSubmitBtn">送出問卷</button>
+      </div>
+      <div class="note hidden" id="trustFormError" style="background:var(--warn-soft);color:#8A3F2C;">請完成所有題目後再送出。</div>
+    </div>
+  `;
+  document.getElementById('trustSubmitBtn').addEventListener('click', () => {
+    const trustScores = TRUST_ITEMS.map((_,i) => {
+      const el = document.querySelector(`input[name="trust_${i}"]:checked`); return el ? Number(el.value) : null;
+    });
+    const neuroScores = NEURO_ITEMS.map((_,i) => {
+      const el = document.querySelector(`input[name="neuro_${i}"]:checked`); return el ? Number(el.value) : null;
+    });
+    const innovScores = INNOV_ITEMS.map((_,i) => {
+      const el = document.querySelector(`input[name="innov_${i}"]:checked`); return el ? Number(el.value) : null;
+    });
+    const errEl = document.getElementById('trustFormError');
+    const groups = [
+      ...trustScores.map((v,i) => ({v, name:'trust_'+i})),
+      ...neuroScores.map((v,i) => ({v, name:'neuro_'+i})),
+      ...innovScores.map((v,i) => ({v, name:'innov_'+i}))
+    ];
+    const firstMissing = groups.find(g => g.v === null);
+    if(firstMissing){
+      if(errEl) errEl.classList.remove('hidden');
+      const firstGroup = document.querySelector(`input[name="${firstMissing.name}"]`);
+      if(firstGroup) firstGroup.closest('div').scrollIntoView({behavior:'smooth', block:'center'});
+      return;
+    }
+    if(errEl) errEl.classList.add('hidden');
+    S.trust = {
+      items: trustScores,
+      avg: +(trustScores.reduce((a,b)=>a+b,0)/trustScores.length).toFixed(2)
+    };
+    S.scaleScores = {
+      neurodiversityItems: neuroScores,
+      neurodiversityAvg: +(neuroScores.reduce((a,b)=>a+b,0)/neuroScores.length).toFixed(2),
+      personalInnovativenessItems: innovScores,
+      personalInnovativenessAvg: +(innovScores.reduce((a,b)=>a+b,0)/innovScores.length).toFixed(2)
+    };
+    S.stage = 'demographics';
+    render();
+  });
+}
+
+/* ============ SAVE & DONE ============ */
+function buildRow(){
+  const d = S.demographics || {};
+  const acc = S.condition === 'universal' ? S.accommodations : {};
+  const neuro = S.scaleScores.neurodiversityItems || [];
+  const innov = S.scaleScores.personalInnovativenessItems || [];
+  const trust = (S.trust && S.trust.items) || [];
+  const row = {
+    id: S.id,
+    timestamp: new Date().toISOString(),
+    condition: conditionLabel(S.condition),
+    conditionCode: S.condition,
+    mode: S.condition === 'universal' ? S.mode : 'video',
+    didPractice: S.didPractice,
+    captions: !!acc.captions, practice: !!acc.practice, bgCustom: !!acc.bgCustom, positiveTimer: !!acc.positiveTimer,
+    extraTimeUsedCount: S.responses.filter(r => r.extraTimeUsed).length,
+    age: d.age, gender: d.gender, education: d.education,
+    jobFunction: d.jobFunction, industry: d.industry, email: d.email,
+    priorAiInterviewExperience: d.priorAiInterviewExperience,
+    aiToolUsageFrequency: d.aiToolUsageFrequency,
+    neurodiversityAvg: S.scaleScores.neurodiversityAvg,
+    personalInnovativenessAvg: S.scaleScores.personalInnovativenessAvg,
+    trustAvg: S.trust && S.trust.avg
+  };
+  neuro.forEach((v,i) => row['neuro_'+(i+1)] = v);
+  innov.forEach((v,i) => row['innov_'+(i+1)] = v);
+  trust.forEach((v,i) => row['trust_'+(i+1)] = v);
+  S.responses.forEach((r,i) => {
+    const q = 'q'+(i+1)+'_';
+    row[q+'responseTimeSec'] = r.responseTimeSec;
+    row[q+'extraTimeUsed'] = r.extraTimeUsed;
+    row[q+'answerText'] = r.answerText || '';
+  });
+  return row;
+}
+
+async function finishAndSave(){
+  S.id = genId();
+  const row = buildRow();
+  S.lastRecord = row;
+  S.saveStatus = { ok:false, msg:'' };
+  try{
+    // 用 text/plain 送出，避免瀏覽器的跨網域預檢被 Google 擋下
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'save', row: row })
+    });
+    const data = await res.json();
+    if(data && data.status === 'ok') S.saveStatus.ok = true;
+    else S.saveStatus.msg = (data && data.message) || '未知錯誤';
+  }catch(err){
+    S.saveStatus.msg = (err && err.message) || String(err);
+  }
+  S.stage = 'done';
+  render();
+}
+
+function renderDone(){
+  const st = S.saveStatus || {};
+  document.getElementById('cardRoot').innerHTML = `
+    <div class="thankyou-wrap">
+      <h2>感謝您的參與！</h2>
+      <p class="sub" style="margin-bottom:4px;">您的受試者代碼</p>
+      <div class="pid">${S.id || '-'}</div>
+      ${st.ok
+        ? `<div class="save-status ok">資料已成功送出</div>`
+        : `<div class="save-status err">資料上傳失敗（${escapeHtml(st.msg || '')}）<br>請截圖此畫面並聯絡研究人員。</div>`}
+    </div>
+  `;
+}
+
+function escapeHtml(v){
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ============ INIT ============ */
+render();
+</script>
+</body>
+</html>
